@@ -33,10 +33,11 @@ FROM ${containerImage}
 COPY buildstamp buildstamp
 RUN --mount=${mountArgs} \
     --mount=type=bind,source=.,target=/var/dance-cache \
-    cp -p -R /var/dance-cache/. ${targetPath} ${ownershipCommand} || true
+    sh -c "cd /var/dance-cache && tar cf - . | tar xf - -C ${targetPath} ${ownershipCommand}" || true
 `;
     await fs.writeFile(path.join(scratchDir, 'Dancefile.inject'), dancefileContent);
     console.log(dancefileContent);
+    console.log(ownershipCommand);
 
     // Inject Data into Docker Cache
     await run('docker', ['buildx', 'build', '--builder', builder ,'-f', path.join(scratchDir, 'Dancefile.inject'), '--tag', 'dance:inject', cacheSource]);
